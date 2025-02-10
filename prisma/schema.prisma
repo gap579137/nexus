@@ -1,0 +1,48 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id         Int    @id @default(autoincrement())
+  name       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // One-to-many relationship with Link
+  links      Link[]
+}
+
+model Link {
+  id          Int      @id @default(autoincrement())
+  url         String
+  pingUrl     String?  // optional separate ping address
+  label       String?
+  description String?
+  clickCount  Int      @default(0)
+  ping        Float?   // store last measured ping in milliseconds
+  isActive    Boolean  @default(true)  // whether link is active (e.g. for the ping service)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationship to PingLog
+  pingLogs    PingLog[]
+
+  // Relationship to Category
+  categoryId  Int?
+  category    Category? @relation(fields: [categoryId], references: [id])
+}
+
+model PingLog {
+  id        Int      @id @default(autoincrement())
+  linkId    Int
+  link      Link     @relation(fields: [linkId], references: [id])
+  ping      Float
+  createdAt DateTime @default(now())
+}
